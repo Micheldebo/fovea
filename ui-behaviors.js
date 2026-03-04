@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     once: true,
     onEnter: function(batch) {
       gsap.to(batch, {
-        autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out',
+        autoAlpha: 1, y: 0, duration: 1.2, ease: 'power3.out',
         stagger: window.innerWidth > 478 ? 0.3 : 0
       });
     }
