@@ -1,4 +1,4 @@
-window.lenis = new Lenis({ smoothWheel: true });
+window.lenis = new Lenis({ smoothWheel: true, syncTouch: false });
 window.lenis.on('scroll', ScrollTrigger.update);
 gsap.ticker.add((t) => window.lenis.raf(t * 1000));
 gsap.ticker.lagSmoothing(0);
