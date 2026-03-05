@@ -1,10 +1,6 @@
-// ─── Plugin Registration ───────────────────────────────────────────────────
-gsap.registerPlugin(ScrollTrigger, Draggable);
-
 // ─── Lenis Smooth Scroll ───────────────────────────────────────────────────
 window.lenis = new Lenis({ smoothWheel: true });
 
-// ─── Connect Lenis ↔ ScrollTrigger ────────────────────────────────────────
 window.lenis.on('scroll', ScrollTrigger.update);
 
 gsap.ticker.add((t) => window.lenis.raf(t * 1000));
