@@ -1,17 +1,20 @@
-document.querySelectorAll('.html5-video').forEach(function(video) {
-  video.style.opacity = '0';
-  video.play().then(function() {
-    video.style.opacity = '1';
-  }).catch(function() {
-    var fallback = document.createElement('img');
-    fallback.src = video.getAttribute('data-fallback');
-    fallback.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;';
-    video.parentNode.insertBefore(fallback, video);
-    video.style.display = 'none';
-  });
-});
+document.addEventListener('DOMContentLoaded', function() {
 
-(function () {
+  // HTML5 Video
+  document.querySelectorAll('.html5-video').forEach(function(video) {
+    video.style.opacity = '0';
+    video.play().then(function() {
+      video.style.opacity = '1';
+    }).catch(function() {
+      var fallback = document.createElement('img');
+      fallback.src = video.getAttribute('data-fallback');
+      fallback.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;';
+      video.parentNode.insertBefore(fallback, video);
+      video.style.display = 'none';
+    });
+  });
+
+  // iOS Vimeo visibility
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   document.querySelectorAll('[data-ios-vimeo]').forEach(function(el) {
@@ -19,10 +22,8 @@ document.querySelectorAll('.html5-video').forEach(function(video) {
     if (isIOS  && value === 'false') el.style.display = 'none';
     if (!isIOS && value === 'true')  el.style.display = 'none';
   });
-})();
 
-document.addEventListener('DOMContentLoaded', function() {
-
+  // GSAP ScrollTrigger play/pause
   gsap.utils.toArray('[data-video="playpause"]').forEach(function(el) {
     var v = el.querySelector('video');
     if (!v) return;
@@ -37,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // Vimeo Players
   document.querySelectorAll('[data-vimeo-player-init]').forEach(function(vimeoElement, index) {
     var vimeoVideoID = vimeoElement.getAttribute('data-vimeo-video-id');
     if (!vimeoVideoID) return;
