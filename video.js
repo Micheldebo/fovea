@@ -122,15 +122,25 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
 
-    var pauseBtn = vimeoElement.querySelector('[data-vimeo-control="pause"]');
-    if (pauseBtn) {
-      pauseBtn.addEventListener('click', function() {
-        vimeoPlayerPause();
-        if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'true') {
-          vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
-        }
-      });
+ // Handle ALL pause controls (bottom bar + click overlay)
+var pauseBtns = vimeoElement.querySelectorAll('[data-vimeo-control="pause"]');
+pauseBtns.forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var isPlaying = vimeoElement.getAttribute('data-vimeo-playing') === 'true';
+    if (isPlaying) {
+      vimeoPlayerPause();
+      if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'true') {
+        vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
+      }
+    } else {
+      vimeoPlayerPlay();
+      if (vimeoElement.getAttribute('data-vimeo-muted') !== 'true') {
+        player.setVolume(1);
+      }
     }
+  });
+});
 
     var muteBtn = vimeoElement.querySelector('[data-vimeo-control="mute"]');
     if (muteBtn) {
