@@ -39,7 +39,6 @@ onReady(function () {
         }
       });
     });
-    return () => gsap.context().revert();
   });
 
   // Scroll Reveal
