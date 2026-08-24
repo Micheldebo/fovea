@@ -2,111 +2,125 @@ document.addEventListener('DOMContentLoaded', () => {
   const FULL_SLIDER_DURATION = 1;
 
   // Basic GSAP Slider
-  document.querySelectorAll('[data-gsap-slider-init]:not([data-slider="full"])').forEach((root) => {
-    root._sliderDraggable?.kill?.();
-    const coll  = root.querySelector('[data-gsap-slider-collection]');
-    const track = root.querySelector('[data-gsap-slider-list]');
-    const items = [...root.querySelectorAll('[data-gsap-slider-item]')];
-    const ctrls = [...root.querySelectorAll('[data-gsap-slider-control]')];
-    if (!coll || !track || !items.length) return;
+  function initCardsSlider() {
+    document.querySelectorAll('[data-gsap-slider-init]:not([data-slider="full"])').forEach((root) => {
+      root._sliderDraggable?.kill?.();
+      const coll  = root.querySelector('[data-gsap-slider-collection]');
+      const track = root.querySelector('[data-gsap-slider-list]');
+      const items = [...root.querySelectorAll('[data-gsap-slider-item]')];
+      const ctrls = [...root.querySelectorAll('[data-gsap-slider-control]')];
+      if (!coll || !track || !items.length) return;
 
-    root.setAttribute('role', 'region');
-    coll.setAttribute('role', 'group');
-    items.forEach((s, i) => {
-      s.setAttribute('role', 'group');
-      s.setAttribute('aria-label', 'Slide ' + (i + 1) + ' of ' + items.length);
-    });
-    ctrls.forEach((b) => {
-      b.setAttribute('role', 'button');
-      b.setAttribute('aria-label', b.getAttribute('data-gsap-slider-control') === 'prev' ? 'Previous Slide' : 'Next Slide');
-      b.disabled = true;
-      b.setAttribute('aria-disabled', 'true');
-    });
-
-    const cs     = getComputedStyle(items[0]);
-    const mr     = parseFloat(cs.marginRight) || 0;
-    const slideW = items[0].getBoundingClientRect().width + mr;
-    let spv = parseFloat(getComputedStyle(root).getPropertyValue('--slider-spv'));
-    if (isNaN(spv)) spv = coll.clientWidth / slideW;
-    const statusOn = getComputedStyle(root).getPropertyValue('--slider-status').trim() === 'on';
-
-    if (!(statusOn && spv < items.length)) {
-      track.removeAttribute('style');
-      root.removeAttribute('role');
-      coll.removeAttribute('role');
-      items.forEach((s) => {
-        s.removeAttribute('role');
-        s.removeAttribute('aria-hidden');
-        s.removeAttribute('tabindex');
-        s.removeAttribute('data-gsap-slider-item-status');
-      });
-      ctrls.forEach((b) => { b.disabled = false; b.setAttribute('aria-disabled', 'false'); });
-      return;
-    }
-
-    const vw        = coll.clientWidth;
-    const tw        = track.scrollWidth;
-    const maxScroll = Math.max(tw - vw, 0);
-    const minX      = -maxScroll;
-    const pts  = [];
-    const full = Math.floor(maxScroll / slideW);
-    for (let i = 0; i <= full; i++) pts.push(-i * slideW);
-    if (full < maxScroll / slideW) pts.push(-maxScroll);
-
-    const setX = gsap.quickSetter(track, 'x', 'px');
-    let active   = 0;
-    let collRect = coll.getBoundingClientRect();
-
-    function update(x) {
-      const cx      = Math.min(0, Math.max(minX, x));
-      const closest = pts.reduce((a, b) => (Math.abs(b - cx) < Math.abs(a - cx) ? b : a), pts[0]);
-      active        = Math.max(0, pts.indexOf(closest));
+      root.setAttribute('role', 'region');
+      coll.setAttribute('role', 'group');
       items.forEach((s, i) => {
-        const r      = s.getBoundingClientRect();
-        const le     = r.left - collRect.left;
-        const center = le + r.width / 2;
-        const inView = center > 0 && center < collRect.width;
-        s.setAttribute('data-gsap-slider-item-status', i === active ? 'active' : inView ? 'inview' : 'not-active');
-        s.setAttribute('aria-hidden', (!inView).toString());
-        s.setAttribute('tabindex', i === active ? '0' : '-1');
+        s.setAttribute('role', 'group');
+        s.setAttribute('aria-label', 'Slide ' + (i + 1) + ' of ' + items.length);
       });
       ctrls.forEach((b) => {
-        const dir = b.getAttribute('data-gsap-slider-control');
-        const can = dir === 'prev' ? active > 0 : active < pts.length - 1;
-        b.disabled = !can;
-        b.setAttribute('aria-disabled', (!can).toString());
+        b.setAttribute('role', 'button');
+        b.setAttribute('aria-label', b.getAttribute('data-gsap-slider-control') === 'prev' ? 'Previous Slide' : 'Next Slide');
+        b.disabled = true;
+        b.setAttribute('aria-disabled', 'true');
       });
-    }
 
-    ctrls.forEach((b) => b.addEventListener('click', () => {
-      if (b.disabled) return;
-      const delta  = b.getAttribute('data-gsap-slider-control') === 'next' ? 1 : -1;
-      const target = pts[active + delta];
-      if (typeof target !== 'number') return;
-      gsap.to(track, {
-        duration: 0.4,
-        x: target,
-        onUpdate: () => update(gsap.getProperty(track, 'x')),
-      });
-    }));
+      const cs     = getComputedStyle(items[0]);
+      const mr     = parseFloat(cs.marginRight) || 0;
+      const slideW = items[0].getBoundingClientRect().width + mr;
+      let spv = parseFloat(getComputedStyle(root).getPropertyValue('--slider-spv'));
+      if (isNaN(spv)) spv = coll.clientWidth / slideW;
+      const statusOn = getComputedStyle(root).getPropertyValue('--slider-status').trim() === 'on';
 
-    root._sliderDraggable = Draggable.create(track, {
-      type: 'x',
-      bounds: { minX, maxX: 0 },
-      inertia: true,
-      throwResistance: 2000,
-      dragResistance: 0.05,
-      snap: { x: pts, duration: 0.4 },
-      onPress()         { track.setAttribute('data-gsap-slider-list-status', 'grabbing'); collRect = coll.getBoundingClientRect(); },
-      onDrag()          { setX(this.x); update(this.x); },
-      onThrowUpdate()   { setX(this.x); update(this.x); },
-      onThrowComplete() { setX(this.endX); update(this.endX); track.setAttribute('data-gsap-slider-list-status', 'grab'); },
-      onRelease()       { setX(this.x); update(this.x); track.setAttribute('data-gsap-slider-list-status', 'grab'); },
-    })[0];
+      if (!(statusOn && spv < items.length)) {
+        track.removeAttribute('style');
+        root.removeAttribute('role');
+        coll.removeAttribute('role');
+        items.forEach((s) => {
+          s.removeAttribute('role');
+          s.removeAttribute('aria-hidden');
+          s.removeAttribute('tabindex');
+          s.removeAttribute('data-gsap-slider-item-status');
+        });
+        ctrls.forEach((b) => { b.disabled = false; b.setAttribute('aria-disabled', 'false'); });
+        return;
+      }
 
-    setX(0);
-    update(0);
+      const vw        = coll.clientWidth;
+      const tw        = track.scrollWidth;
+      const maxScroll = Math.max(tw - vw, 0);
+      const minX      = -maxScroll;
+      const pts  = [];
+      const full = Math.floor(maxScroll / slideW);
+      for (let i = 0; i <= full; i++) pts.push(-i * slideW);
+      if (full < maxScroll / slideW) pts.push(-maxScroll);
+
+      const setX = gsap.quickSetter(track, 'x', 'px');
+      let active   = 0;
+      let collRect = coll.getBoundingClientRect();
+
+      function update(x) {
+        const cx      = Math.min(0, Math.max(minX, x));
+        const closest = pts.reduce((a, b) => (Math.abs(b - cx) < Math.abs(a - cx) ? b : a), pts[0]);
+        active        = Math.max(0, pts.indexOf(closest));
+        items.forEach((s, i) => {
+          const r      = s.getBoundingClientRect();
+          const le     = r.left - collRect.left;
+          const center = le + r.width / 2;
+          const inView = center > 0 && center < collRect.width;
+          s.setAttribute('data-gsap-slider-item-status', i === active ? 'active' : inView ? 'inview' : 'not-active');
+          s.setAttribute('aria-hidden', (!inView).toString());
+          s.setAttribute('tabindex', i === active ? '0' : '-1');
+        });
+        ctrls.forEach((b) => {
+          const dir = b.getAttribute('data-gsap-slider-control');
+          const can = dir === 'prev' ? active > 0 : active < pts.length - 1;
+          b.disabled = !can;
+          b.setAttribute('aria-disabled', (!can).toString());
+        });
+      }
+
+      ctrls.forEach((b) => b.addEventListener('click', () => {
+        if (b.disabled) return;
+        const delta  = b.getAttribute('data-gsap-slider-control') === 'next' ? 1 : -1;
+        const target = pts[active + delta];
+        if (typeof target !== 'number') return;
+        gsap.to(track, {
+          duration: 0.4,
+          x: target,
+          onUpdate: () => update(gsap.getProperty(track, 'x')),
+        });
+      }));
+
+      root._sliderDraggable = Draggable.create(track, {
+        type: 'x',
+        bounds: { minX, maxX: 0 },
+        inertia: true,
+        throwResistance: 2000,
+        dragResistance: 0.05,
+        snap: { x: pts, duration: 0.4 },
+        onPress()         { track.setAttribute('data-gsap-slider-list-status', 'grabbing'); collRect = coll.getBoundingClientRect(); },
+        onDrag()          { setX(this.x); update(this.x); },
+        onThrowUpdate()   { setX(this.x); update(this.x); },
+        onThrowComplete() { setX(this.endX); update(this.endX); track.setAttribute('data-gsap-slider-list-status', 'grab'); },
+        onRelease()       { setX(this.x); update(this.x); track.setAttribute('data-gsap-slider-list-status', 'grab'); },
+      })[0];
+
+      setX(0);
+      update(0);
+    });
+  }
+
+  initCardsSlider();
+
+  // Re-measure after fonts/images/CMS content settle, and on resize/orientation change.
+  // Fixes prev/next buttons silently breaking on mobile when the initial width
+  // measurement happens before layout has fully settled.
+  let cardsResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(cardsResizeTimer);
+    cardsResizeTimer = setTimeout(initCardsSlider, 150);
   });
+  window.addEventListener('load', () => initCardsSlider());
 
   // Full Looping Slider
   document.querySelectorAll('[data-gsap-slider-init][data-slider="full"]').forEach((root) => {
